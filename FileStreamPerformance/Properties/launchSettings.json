@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "FileStreamPerformance": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\poizan\\Documents\\dev\\coreclr\\bin\\Product\\Windows_NT.x64.Debug\\CoreRun.exe",
+      "commandLineArgs": "FileStreamPerformance.dll",
+      "nativeDebugging": false
+    }
+  }
+}
