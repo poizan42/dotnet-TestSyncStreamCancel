@@ -5,15 +5,12 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <UseAppHost>false</UseAppHost>
-    <NoStdLib>true</NoStdLib>
-    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="System.Private.CoreLib">
-      <HintPath>..\..\coreclr\bin\Product\Windows_NT.x64.Debug\System.Private.CoreLib.dll</HintPath>
-    </Reference>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+    <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

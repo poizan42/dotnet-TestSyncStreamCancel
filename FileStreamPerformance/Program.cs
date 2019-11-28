@@ -1,50 +1,71 @@
-﻿using Microsoft.Win32.SafeHandles;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Diagnosers;
+using BenchmarkDotNet.Running;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Console = Internal.Console;
 
-namespace FileStreamPerformance
+[MemoryDiagnoser]
+public class Program
 {
-  class Program
-  {
-    [DllImport("Kernel32.dll", SetLastError = true)]
-    private static extern bool CreatePipe(out SafeFileHandle hReadPipe, out SafeFileHandle hWritePipe, IntPtr lpPipeAttributes, int nSize);
+    static void Main(string[] args) => BenchmarkSwitcher.FromAssemblies(new[] { typeof(Program).Assembly }).Run(args);
 
-    static void Main(string[] args)
+    private string _path;
+    private Stream _stream;
+    private CancellationTokenSource _tcs;
+
+    private const int NumSegments = 10_2400;
+
+    private static byte[] _buffer = new byte[1024];
+
+    [GlobalSetup]
+    public void Setup()
     {
-      if (!CreatePipe(out SafeFileHandle readPipeHandle, out SafeFileHandle writePipeHandle, IntPtr.Zero, 0))
-      {
-        Console.WriteLine(string.Format("CreatePipe failed: {0:X8}", Marshal.GetLastWin32Error()));
-        return;
-      }
-      Task benchmarkTask = new Task(() =>
-      {
-        // ...
-      }, TaskCreationOptions.LongRunning);
-      Thread writerThread = new Thread(() =>
-      {
-        using (FileStream fsWrite = new FileStream(writePipeHandle, FileAccess.Write))
+        _tcs = new CancellationTokenSource();
+
+        new Random(42).NextBytes(_buffer);
+
+        _path = Path.GetTempFileName();
+        using (var fs = File.OpenWrite(_path))
         {
-          byte[] buf = new byte[10240];
-          while (true)
-          {
-            try
+            for (int i = 0; i < NumSegments; i++)
             {
-              fsWrite.Write(buf);
+                fs.Write(_buffer, 0, _buffer.Length);
             }
-            catch (IOException)
-            {
-              return;
-            }
-          }
         }
-      });
-      writerThread.IsBackground = true;
-      writerThread.Start();
-      benchmarkTask.Wait();
+
+        _stream = new FileStream(_path, FileMode.Open, FileAccess.ReadWrite, FileShare.None, 1, useAsync: false);
     }
-  }
+
+    [GlobalCleanup]
+    public void Cleanup()
+    {
+        _stream.Dispose();
+        File.Delete(_path);
+    }
+
+    [Benchmark]
+    public async Task ReadAll()
+    {
+        _stream.Position = 0;
+        while (await _stream.ReadAsync(_buffer, 0, _buffer.Length) != 0) ;
+    }
+
+    [Benchmark]
+    public async Task ReadAllCancelable()
+    {
+        _stream.Position = 0;
+        while (await _stream.ReadAsync(_buffer, 0, _buffer.Length, _tcs.Token) != 0) ;
+    }
+
+    [Benchmark]
+    public async Task WriteAll()
+    {
+        _stream.Position = 0;
+        for (int i = 0; i < NumSegments; i++)
+        {
+            await _stream.WriteAsync(_buffer, 0, _buffer.Length);
+        }
+    }
 }

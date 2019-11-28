@@ -2,9 +2,9 @@
   "profiles": {
     "FileStreamPerformance": {
       "commandName": "Executable",
-      "executablePath": "C:\\Users\\poizan\\Documents\\dev\\coreclr\\bin\\Product\\Windows_NT.x64.Debug\\CoreRun.exe",
+      "executablePath": "C:\\Users\\poizan\\Documents\\dev\\coreclr\\bin\\Product\\Windows_NT.x64.Release\\CoreRun.exe",
       "commandLineArgs": "FileStreamPerformance.dll",
-      "nativeDebugging": false
+      "nativeDebugging": true
     }
   }
 }
