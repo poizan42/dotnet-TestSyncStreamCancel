@@ -22,6 +22,7 @@ public class Program
     [GlobalSetup]
     public void Setup()
     {
+        System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(typeof(Stream).TypeHandle);
         _tcs = new CancellationTokenSource();
 
         new Random(42).NextBytes(_buffer);
